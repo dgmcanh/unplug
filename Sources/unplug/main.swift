@@ -8,6 +8,19 @@ if CommandLine.arguments.contains("--self-check") {
 // The app runs as the ordinary user. Only pfctl is privileged, through the
 // sudoers rule run.sh installs — see Blocker.
 
+// Behind-window blur, the Finder sidebar look. SwiftUI's own .ultraThinMaterial
+// blurs only what is inside the window, so this stays an AppKit view.
+struct Vibrancy: NSViewRepresentable {
+    func makeNSView(context _: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .sidebar
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+    func updateNSView(_: NSVisualEffectView, context _: Context) {}
+}
+
 struct AppList: View {
     @ObservedObject var monitor: Monitor
 
@@ -32,9 +45,11 @@ struct AppList: View {
                     .labelsHidden()
                     .help(monitor.isBlocked(app) ? "network off" : "network on")
                 }
+                .padding(.vertical, 3)  // 28pt sidebar row pitch, +20%
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
     }
 }
 
@@ -42,7 +57,9 @@ struct ContentView: View {
     @StateObject private var monitor = Monitor()
 
     var body: some View {
-        AppList(monitor: monitor).task { monitor.start() }
+        AppList(monitor: monitor)
+            .background(Vibrancy().ignoresSafeArea())
+            .task { monitor.start() }
     }
 }
 
@@ -62,15 +79,22 @@ let delegate = Delegate()
 let app = NSApplication.shared
 app.delegate = delegate
 let window = NSWindow(
-    contentRect: NSRect(x: 0, y: 0, width: 360, height: 680),
-    styleMask: [.titled, .closable, .miniaturizable, .resizable],
+    contentRect: NSRect(x: 0, y: 0, width: 360, height: 400),
+    styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
     backing: .buffered, defer: false)
 window.title = "Unplug"
+// Titlebar keeps only the traffic lights; the list runs the full height behind
+// it, and the window is clear so the vibrancy view is what shows.
+window.titleVisibility = .hidden
+window.titlebarAppearsTransparent = true
+window.isMovableByWindowBackground = true
+window.isOpaque = false
+window.backgroundColor = .clear
 // NSHostingController, not a bare NSHostingView as the contentView: the view
 // form resolves its own size against the window that is sizing itself from it,
 // and inside a real app bundle that loop aborts in AttributeGraph.
 window.contentViewController = NSHostingController(rootView: ContentView())
-window.setContentSize(NSSize(width: 360, height: 680))
+window.setContentSize(NSSize(width: 360, height: 400))
 window.center()
 window.makeKeyAndOrderFront(nil)
 app.run()
