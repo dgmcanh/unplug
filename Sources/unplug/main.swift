@@ -80,7 +80,7 @@ let app = NSApplication.shared
 app.delegate = delegate
 let window = NSWindow(
     contentRect: NSRect(x: 0, y: 0, width: 360, height: 400),
-    styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+    styleMask: [.titled, .closable, .fullSizeContentView],
     backing: .buffered, defer: false)
 window.title = "Unplug"
 // Titlebar keeps only the traffic lights; the list runs the full height behind
@@ -88,6 +88,8 @@ window.title = "Unplug"
 window.titleVisibility = .hidden
 window.titlebarAppearsTransparent = true
 window.isMovableByWindowBackground = true
+window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+window.standardWindowButton(.zoomButton)?.isHidden = true
 window.isOpaque = false
 window.backgroundColor = .clear
 // NSHostingController, not a bare NSHostingView as the contentView: the view
