@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Design source: https://claude.ai/artifact/LXrxsUQ5bbeahkofsC7E3w (Icon — dark).
+       Full-bleed square on purpose: macOS 26 masks it to its own squircle and
+       any transparent margin gets a light system plate behind it. On 14/15 the
+       corners show square; a per-OS icns would be the fix if that matters. -->
+  <rect width="1024" height="1024" fill="#141413"/>
+  <rect x="252" y="272" width="520" height="480" rx="72" fill="#FAF9F5"/>
+  <path d="M352.0,436.0 Q352,392 396.0,392.0 L420.0,392.0 Q446,392 451.5,366.6 L456.5,343.4 Q462,318 488.0,318.0 L536.0,318.0 Q562,318 567.5,343.4 L572.5,366.6 Q578,392 604.0,392.0 L628.0,392.0 Q672,392 672.0,436.0 L672.0,608.0 Q672,652 628.0,652.0 L396.0,652.0 Q352,652 352.0,608.0 Z" fill="#141413"/>
+  <rect x="392" y="690" width="64" height="24" rx="12" fill="#D97757"/>
+  <rect x="568" y="690" width="64" height="24" rx="12" fill="#D97757"/>
+</svg>
