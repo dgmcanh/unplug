@@ -57,7 +57,10 @@ struct ContentView: View {
     @StateObject private var monitor = Monitor()
 
     var body: some View {
+        // Clip to the safe area so a scrolled list stops at the titlebar instead
+        // of running under the close button.
         AppList(monitor: monitor)
+            .clipped()
             .background(Vibrancy().ignoresSafeArea())
             .task { monitor.start() }
     }
@@ -88,6 +91,10 @@ window.title = "Unplug"
 window.titleVisibility = .hidden
 window.titlebarAppearsTransparent = true
 window.isMovableByWindowBackground = true
+// An empty toolbar only to grow the titlebar band to 38pt, tall enough to hold
+// the close button at an even margin.
+window.toolbar = NSToolbar()
+window.toolbarStyle = .unifiedCompact
 window.standardWindowButton(.miniaturizeButton)?.isHidden = true
 window.standardWindowButton(.zoomButton)?.isHidden = true
 window.isOpaque = false
@@ -97,6 +104,34 @@ window.backgroundColor = .clear
 // and inside a real app bundle that loop aborts in AttributeGraph.
 window.contentViewController = NSHostingController(rootView: ContentView())
 window.setContentSize(NSSize(width: 360, height: 400))
-window.center()
+// Open on the built-in display when one is connected, else on the main screen.
+let screen = NSScreen.screens.first {
+    let id = $0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
+    return id.map { CGDisplayIsBuiltin($0) != 0 } ?? false
+} ?? NSScreen.main
+if let area = screen?.visibleFrame {
+    window.setFrameOrigin(NSPoint(x: area.midX - window.frame.width / 2,
+                                  y: area.midY - window.frame.height / 2))
+}
 window.makeKeyAndOrderFront(nil)
+// shortcut: 25pt is the .sidebar row inset plus half the 18pt icon, measured on
+// macOS 27; derive it from the list's layout if a release moves the inset.
+// The close button is centred 25pt in from the left and from the top, so it
+// lines up with the icons and its two margins match. AppKit re-tiles the
+// titlebar buttons on its own layout passes, so it is pinned back whenever its
+// frame moves.
+if let close = window.standardWindowButton(.closeButton) {
+    let center: CGFloat = 25
+    let pin = {
+        guard let bar = close.superview else { return }
+        let top = bar.isFlipped ? center : bar.bounds.height - center
+        let origin = NSPoint(x: center - close.frame.width / 2, y: top - close.frame.height / 2)
+        if close.frame.origin != origin { close.setFrameOrigin(origin) }
+    }
+    close.postsFrameChangedNotifications = true
+    NotificationCenter.default.addObserver(
+        forName: NSView.frameDidChangeNotification, object: close, queue: .main
+    ) { _ in pin() }
+    pin()
+}
 app.run()
